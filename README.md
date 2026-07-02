@@ -38,6 +38,17 @@ archive of the old `autocollisionrepairgonzales.com` site — the real building 
 Just open `index.html` in any browser (double-click it). No build step, no dependencies —
 it's fully static.
 
+## SEO
+
+On-page SEO is retrofitted: `AutoBodyShop` JSON-LD structured data (name, phone, address,
+opening hours, image, url, areaServed, aggregateRating, sameAs), a canonical link, complete
+Open Graph + Twitter Card tags, plus `robots.txt` and `sitemap.xml` at the repo root.
+
+**Base URL placeholder:** the canonical link, `og:url`, JSON-LD `url`/`image`, `robots.txt`, and
+`sitemap.xml` all use the literal placeholder `https://REPLACE-WITH-DOMAIN.com/`. Before deploying,
+do a one-line find-and-replace of `https://REPLACE-WITH-DOMAIN.com/` with the real domain across
+those files.
+
 ## Notes
 
 - The estimate form is a front-end demo; it is **not wired to a backend** and sends nothing.
