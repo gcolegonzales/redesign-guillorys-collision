@@ -7,8 +7,8 @@ a family-owned auto body and collision repair shop in Gonzales, LA.
 
 Their current website (`autocollisionrepairgonzales.com`) loads an **error page** — it's effectively
 down. Anyone who searches for the shop online finds nothing working, which means missed estimates and
-lost trust for a business that has earned a 37-year reputation and a 4.6-star average across 62
-reviews. This concept shows a fast, modern, mobile-friendly site — built around the shop's real brand
+lost trust for a business that has earned a 37-year reputation and a strong local review reputation.
+This concept shows a fast, modern, mobile-friendly site — built around the shop's real brand
 voice ("Honest people, quality work") — that puts the phone number, the free-estimate request, and the
 lifetime warranty front and center.
 
@@ -41,7 +41,7 @@ it's fully static.
 ## SEO
 
 On-page SEO is retrofitted: `AutoBodyShop` JSON-LD structured data (name, phone, address,
-opening hours, image, url, areaServed, aggregateRating, sameAs), a canonical link, complete
+opening hours, image, url, areaServed, sameAs), a canonical link, complete
 Open Graph + Twitter Card tags, plus `robots.txt` and `sitemap.xml` at the repo root.
 
 **Base URL placeholder:** the canonical link, `og:url`, JSON-LD `url`/`image`, `robots.txt`, and
