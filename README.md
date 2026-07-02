@@ -45,8 +45,8 @@ opening hours, image, url, areaServed, aggregateRating, sameAs), a canonical lin
 Open Graph + Twitter Card tags, plus `robots.txt` and `sitemap.xml` at the repo root.
 
 **Base URL placeholder:** the canonical link, `og:url`, JSON-LD `url`/`image`, `robots.txt`, and
-`sitemap.xml` all use the literal placeholder `https://REPLACE-WITH-DOMAIN.com/`. Before deploying,
-do a one-line find-and-replace of `https://REPLACE-WITH-DOMAIN.com/` with the real domain across
+`sitemap.xml` all use the literal placeholder `https://guilloryscollision.com/`. Before deploying,
+do a one-line find-and-replace of `https://guilloryscollision.com/` with the real domain across
 those files.
 
 ## Notes
