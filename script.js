@@ -11,8 +11,7 @@
   /* ---- Sticky header shrink on scroll ---- */
   var header = document.querySelector('.site-header');
   function onScroll() {
-    if (!header) return;
-    header.classList.toggle('scrolled', window.scrollY > 20);
+    if (header) header.classList.toggle('scrolled', window.scrollY > 24);
   }
   onScroll();
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -24,12 +23,13 @@
     toggle.addEventListener('click', function () {
       var open = toggle.getAttribute('aria-expanded') === 'true';
       toggle.setAttribute('aria-expanded', String(!open));
+      toggle.setAttribute('aria-label', open ? 'Open menu' : 'Close menu');
       navLinks.classList.toggle('open', !open);
     });
-    // Close on link click (mobile)
     navLinks.addEventListener('click', function (e) {
       if (e.target.closest('a')) {
         toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-label', 'Open menu');
         navLinks.classList.remove('open');
       }
     });
@@ -51,41 +51,57 @@
     revealEls.forEach(function (el) { io.observe(el); });
   }
 
+  /* ---- Count-up on the "37 years" ledger number ---- */
+  var counter = document.querySelector('.ledger-num[data-count]');
+  if (counter && !reduceMotion && 'IntersectionObserver' in window) {
+    var target = parseInt(counter.getAttribute('data-count'), 10) || 0;
+    var counted = false;
+    var cio = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting && !counted) {
+          counted = true;
+          var start = null, dur = 1100;
+          function tick(ts) {
+            if (start === null) start = ts;
+            var p = Math.min((ts - start) / dur, 1);
+            var eased = 1 - Math.pow(1 - p, 3);
+            counter.textContent = String(Math.round(eased * target));
+            if (p < 1) requestAnimationFrame(tick);
+            else counter.textContent = String(target);
+          }
+          requestAnimationFrame(tick);
+          cio.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.6 });
+    cio.observe(counter);
+  }
+
   /* ---- File input label ---- */
   var fileInput = document.getElementById('f-photo');
   var fileName = document.getElementById('file-name');
   if (fileInput && fileName) {
     fileInput.addEventListener('change', function () {
       var files = fileInput.files;
-      if (!files || !files.length) {
-        fileName.textContent = 'No file chosen';
-      } else if (files.length === 1) {
-        fileName.textContent = files[0].name;
-      } else {
-        fileName.textContent = files.length + ' photos selected';
-      }
+      if (!files || !files.length) fileName.textContent = 'No file chosen';
+      else if (files.length === 1) fileName.textContent = files[0].name;
+      else fileName.textContent = files.length + ' photos selected';
     });
   }
 
-  /* ---- Estimate form (non-wired demo) ---- */
+  /* ---- Estimate form (redesign concept — no live backend) ---- */
   var form = document.getElementById('estimate-form');
   var success = document.getElementById('form-success');
   if (form) {
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-      }
+      if (!form.checkValidity()) { form.reportValidity(); return; }
       if (success) {
         success.hidden = false;
         success.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
       }
       var btn = form.querySelector('button[type="submit"]');
-      if (btn) {
-        btn.textContent = 'Request Sent ✓';
-        btn.disabled = true;
-      }
+      if (btn) { btn.textContent = 'Request sent ✓'; btn.disabled = true; }
     });
   }
 })();
