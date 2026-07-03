@@ -48,6 +48,11 @@
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
+html, body { max-width: 100%; overflow-x: clip; }
+/* Fallback for engines without overflow:clip — html only, so body/window
+   still scroll normally and scrollY-based header logic keeps working. */
+@supports not (overflow-x: clip) { html { overflow-x: hidden; } }
+
 body {
   margin: 0;
   font-family: var(--font-body);
@@ -55,7 +60,7 @@ body {
   background: var(--paper);
   line-height: 1.62;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
 }
 
 img, svg { display: block; max-width: 100%; }
@@ -146,8 +151,13 @@ a { color: inherit; text-decoration: none; }
   background: rgba(18,21,27,.55);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid transparent;
-  transition: background .3s ease, border-color .3s ease, box-shadow .3s ease;
+  transition: background .3s ease, border-color .3s ease, box-shadow .3s ease, transform .3s ease;
+  -webkit-tap-highlight-color: transparent;
 }
+/* Header reveals on any upward scroll; hides when scrolling down */
+.site-header.header-hidden { transform: translateY(-100%); }
+/* Never hide the header while the mobile drawer is open */
+.site-header.nav-open { transform: none; }
 .site-header.scrolled {
   background: rgba(18,21,27,.94);
   border-bottom-color: var(--line-d);
@@ -178,6 +188,9 @@ a { color: inherit; text-decoration: none; }
 
 .main-nav { display: flex; align-items: center; }
 .nav-links { display: flex; gap: .2rem; list-style: none; margin: 0; padding: 0; }
+/* Desktop order: brand (auto) ... nav links ... phone. Phone visually last. */
+.header-call { order: 3; }
+.main-nav { order: 2; }
 .nav-links a {
   display: inline-block; padding: .55rem .9rem; border-radius: 8px;
   font-weight: 600; font-size: .92rem; color: var(--fog);
@@ -197,11 +210,24 @@ a { color: inherit; text-decoration: none; }
   display: none; flex-direction: column; gap: 5px;
   width: 46px; height: 46px; padding: 12px; border: 1px solid var(--line-d);
   border-radius: 10px; background: rgba(255,255,255,.04); cursor: pointer;
+  position: relative; z-index: 1002;
+  -webkit-tap-highlight-color: transparent; user-select: none;
 }
 .nav-toggle span { display: block; height: 2px; width: 100%; background: #fff; border-radius: 2px; transition: transform .28s ease, opacity .2s ease; }
 .nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
 .nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
 .nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Scrim behind the mobile drawer */
+.nav-scrim {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(10,12,16,.55);
+  opacity: 0; pointer-events: none;
+  transition: opacity .32s ease;
+  -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.nav-scrim.open { opacity: 1; pointer-events: auto; }
+@media (min-width: 761px) { .nav-scrim { display: none !important; } }
 
 /* ---------- Hero ---------- */
 .hero {
@@ -547,19 +573,55 @@ a.vl-call:hover { color: var(--amber-ink); }
 
 @media (max-width: 760px) {
   .nav-toggle { display: flex; }
+
+  /* The header keeps its normal size; the drawer/scrim are fixed and escape it.
+     (.site-header's backdrop-filter makes it the containing block for these
+     fixed children, which is fine because the header sits at the viewport top
+     and we never hide it while the menu is open.) */
+  .main-nav { position: static; }
+
+  /* On mobile the hamburger must be the OUTERMOST (right-most) control. */
+  .main-nav { order: 3; }
+  .header-call { order: 2; }
+  /* Hamburger stays put, above drawer + scrim, always tappable. */
+  .nav-toggle { position: relative; z-index: 1002; pointer-events: auto; }
+
+  /* Side-opening drawer — full viewport height, slides from the right.
+     Clipped from widening the page via html/body overflow-x:hidden plus the
+     off-canvas panel never being wider than the viewport. */
   .nav-links {
-    position: absolute; top: 100%; left: 0; right: 0;
-    flex-direction: column; gap: 0;
-    background: rgba(18,21,27,.98); border-bottom: 1px solid var(--line-d);
-    padding: .5rem var(--pad) 1rem;
-    max-height: 0; overflow: hidden; visibility: hidden;
-    transition: max-height .34s ease, visibility .34s ease;
+    position: fixed; top: 0; right: 0;
+    height: 100vh; height: 100dvh;
+    width: min(82vw, 340px); max-width: 86vw;
+    flex-direction: column; gap: 0; align-items: stretch;
+    background: #12151b; /* solid opaque slate */
+    border-left: 1px solid var(--line-d);
+    box-shadow: -24px 0 60px -30px #000;
+    padding: 96px 0 2rem;
+    z-index: 1001;
+    transform: translateX(105%);
+    transition: transform .34s cubic-bezier(.4,0,.2,1);
+    overflow-y: auto;
+    pointer-events: auto;
+    -webkit-tap-highlight-color: transparent; user-select: none;
   }
-  .nav-links.open { max-height: 400px; visibility: visible; }
-  .nav-links a { display: block; padding: .9rem .4rem; border-bottom: 1px solid var(--line-d); }
+  .nav-links.open { transform: translateX(0); }
+  .nav-links li { width: 100%; }
+  .nav-links a {
+    display: block; padding: 1rem 1.6rem 1rem var(--pad);
+    border-bottom: 1px solid var(--line-d);
+    color: var(--fog); font-size: 1.05rem;
+  }
   .nav-links a::after { display: none; }
+  .nav-links a:hover, .nav-links a:active { color: #fff; background: rgba(255,255,255,.05); }
+
+  .main-nav { -webkit-tap-highlight-color: transparent; user-select: none; }
+
+  /* Reserve room on the right for the fixed hamburger so the phone button
+     sits INWARD of it — nothing is closer to the edge than the hamburger. */
+  .header-inner { padding-right: calc(var(--pad) + 58px); }
   .header-call span { display: none; }
-  .header-call { padding: .55rem; }
+  .header-call { padding: .55rem; margin-left: .4rem; }
   .ledger { grid-template-columns: 1fr 1fr; }
   .ledger-item:nth-child(3) { border-left: none; padding-left: 0; }
   .ledger-item { border-top: 1px solid var(--line-d); }
