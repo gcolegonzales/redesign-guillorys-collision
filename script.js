@@ -13,7 +13,35 @@
   var toggle = document.querySelector('.nav-toggle');
   var navLinks = document.getElementById('nav-links');
   var scrim = document.querySelector('.nav-scrim');
+  var mainEl = document.getElementById('main');
+  var footerEl = document.querySelector('.site-footer');
+  var closeBtn = null;
   var navIsOpen = false;
+
+  // Inject a close (X) button at the top of the drawer.
+  if (navLinks) {
+    closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'nav-close';
+    closeBtn.setAttribute('aria-label', 'Close menu');
+    closeBtn.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+    navLinks.insertBefore(closeBtn, navLinks.firstChild);
+  }
+
+  function isMobile() { return window.innerWidth <= 760; }
+
+  function setInert(on) {
+    // Mark the rest of the page inert / aria-hidden while the drawer is open.
+    [mainEl, footerEl].forEach(function (el) {
+      if (!el) return;
+      if (on) { el.setAttribute('inert', ''); el.setAttribute('aria-hidden', 'true'); }
+      else { el.removeAttribute('inert'); el.removeAttribute('aria-hidden'); }
+    });
+  }
+
+  function focusableInDrawer() {
+    return navLinks.querySelectorAll('a[href], button:not([disabled])');
+  }
 
   function setNav(open) {
     navIsOpen = open;
@@ -26,21 +54,60 @@
     }
     if (header) header.classList.toggle('nav-open', open);
     document.body.style.overflow = open ? 'hidden' : '';
+    document.documentElement.style.overflow = open ? 'hidden' : '';
+
+    // Keep off-canvas links out of the tab order when the drawer is closed
+    // (or at desktop widths where it isn't used).
+    if (open && isMobile()) {
+      navLinks.removeAttribute('inert');
+      setInert(true);
+      var first = focusableInDrawer()[0];
+      if (first) first.focus();
+    } else {
+      setInert(false);
+      if (isMobile()) navLinks.setAttribute('inert', '');
+      else navLinks.removeAttribute('inert');
+    }
   }
 
   if (toggle && navLinks) {
+    // At mobile widths the closed drawer must not be reachable by Tab.
+    if (isMobile()) navLinks.setAttribute('inert', '');
+
     toggle.addEventListener('click', function () {
-      setNav(!navIsOpen);
+      var willOpen = !navIsOpen;
+      setNav(willOpen);
+      if (!willOpen) toggle.focus();
     });
     navLinks.addEventListener('click', function (e) {
-      if (e.target.closest('a')) setNav(false);
+      if (e.target.closest('a')) { setNav(false); toggle.focus(); }
     });
-    if (scrim) scrim.addEventListener('click', function () { setNav(false); });
+    if (closeBtn) closeBtn.addEventListener('click', function () { setNav(false); toggle.focus(); });
+    if (scrim) scrim.addEventListener('click', function () { setNav(false); toggle.focus(); });
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && navIsOpen) setNav(false);
+      if (e.key === 'Escape' && navIsOpen) { setNav(false); toggle.focus(); return; }
+      // Focus trap: cycle Tab within the drawer.
+      if (e.key === 'Tab' && navIsOpen) {
+        var items = focusableInDrawer();
+        if (!items.length) return;
+        var firstEl = items[0], lastEl = items[items.length - 1];
+        if (e.shiftKey && document.activeElement === firstEl) {
+          e.preventDefault(); lastEl.focus();
+        } else if (!e.shiftKey && document.activeElement === lastEl) {
+          e.preventDefault(); firstEl.focus();
+        } else if (!navLinks.contains(document.activeElement)) {
+          e.preventDefault(); firstEl.focus();
+        }
+      }
     });
     window.addEventListener('resize', function () {
-      if (navIsOpen && window.innerWidth > 760) setNav(false);
+      if (window.innerWidth > 760) {
+        if (navIsOpen) setNav(false);
+        navLinks.removeAttribute('inert');
+        setInert(false);
+      } else if (!navIsOpen) {
+        navLinks.setAttribute('inert', '');
+      }
     });
   }
 
