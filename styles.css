@@ -229,20 +229,6 @@ a { color: inherit; text-decoration: none; }
 .nav-scrim.open { opacity: 1; pointer-events: auto; }
 @media (min-width: 761px) { .nav-scrim { display: none !important; } }
 
-/* Drawer close (X) button — only shown inside the mobile drawer */
-.nav-close { display: none; }
-@media (max-width: 760px) {
-  .nav-close {
-    display: flex; align-items: center; justify-content: center;
-    position: absolute; top: 18px; right: 16px;
-    width: 44px; height: 44px; padding: 0;
-    background: rgba(255,255,255,.05); border: 1px solid var(--line-d);
-    border-radius: 10px; color: #fff; cursor: pointer; z-index: 2;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .nav-close:hover { background: rgba(255,255,255,.1); }
-}
-
 /* ---------- Hero ---------- */
 .hero {
   position: relative;
@@ -594,10 +580,14 @@ a.vl-call:hover { color: var(--amber-ink); }
      and we never hide it while the menu is open.) */
   .main-nav { position: static; }
 
-  /* On mobile the hamburger must be the OUTERMOST (right-most) control. */
-  .main-nav { order: 3; }
-  .header-call { order: 2; }
-  /* Hamburger stays put, above drawer + scrim, always tappable. */
+  /* Right-align the header controls: brand pushed left (margin-right:auto),
+     then phone, then hamburger hard against the right edge. The hamburger is
+     the OUTERMOST (right-most) control; the phone/CTA sits inward of it. */
+  .header-inner { gap: .5rem; }
+  .main-nav { order: 3; margin-left: 0; }
+  .header-call { order: 2; margin-left: 0; }
+  /* Hamburger stays put, above drawer + scrim, always tappable. It is the
+     single close control — it morphs into an X and never hides while open. */
   .nav-toggle { position: relative; z-index: 1002; pointer-events: auto; }
 
   /* Side-opening drawer — full viewport height, slides from the right.
@@ -631,11 +621,10 @@ a.vl-call:hover { color: var(--amber-ink); }
 
   .main-nav { -webkit-tap-highlight-color: transparent; user-select: none; }
 
-  /* Reserve room on the right for the fixed hamburger so the phone button
-     sits INWARD of it — nothing is closer to the edge than the hamburger. */
-  .header-inner { padding-right: calc(var(--pad) + 58px); }
+  /* The hamburger is in-flow and last (order 3), so it already sits hard
+     against the container's right padding — no extra reservation needed. */
   .header-call span { display: none; }
-  .header-call { padding: .55rem; margin-left: .4rem; }
+  .header-call { padding: .55rem; }
   .ledger { grid-template-columns: 1fr 1fr; }
   .ledger-item:nth-child(3) { border-left: none; padding-left: 0; }
   .ledger-item { border-top: 1px solid var(--line-d); }

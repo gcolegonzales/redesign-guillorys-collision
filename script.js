@@ -15,18 +15,11 @@
   var scrim = document.querySelector('.nav-scrim');
   var mainEl = document.getElementById('main');
   var footerEl = document.querySelector('.site-footer');
-  var closeBtn = null;
   var navIsOpen = false;
 
-  // Inject a close (X) button at the top of the drawer.
-  if (navLinks) {
-    closeBtn = document.createElement('button');
-    closeBtn.type = 'button';
-    closeBtn.className = 'nav-close';
-    closeBtn.setAttribute('aria-label', 'Close menu');
-    closeBtn.innerHTML = '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
-    navLinks.insertBefore(closeBtn, navLinks.firstChild);
-  }
+  // The hamburger itself morphs into an X and stays visible while the drawer is
+  // open (the header is never hidden with the nav open), so it IS the single
+  // close control — no separate in-panel close button is injected.
 
   function isMobile() { return window.innerWidth <= 760; }
 
@@ -52,8 +45,16 @@
       if (open) scrim.hidden = false;
       scrim.classList.toggle('open', open);
     }
-    if (header) header.classList.toggle('nav-open', open);
-    document.body.style.overflow = open ? 'hidden' : '';
+    if (header) {
+      header.classList.toggle('nav-open', open);
+      // The hamburger is the single close control, so the header must be shown
+      // whenever the drawer opens — even if it was hidden by a prior scroll-down.
+      if (open) header.classList.remove('header-hidden');
+    }
+    // Lock scroll on <html> only. Locking <body> makes the body a scroll
+    // container, which detaches the sticky header (dropping the hamburger
+    // off-screen when the drawer is opened after scrolling down). Locking
+    // <html> keeps the header sticking to the viewport and doesn't jump.
     document.documentElement.style.overflow = open ? 'hidden' : '';
 
     // Keep off-canvas links out of the tab order when the drawer is closed
@@ -62,7 +63,7 @@
       navLinks.removeAttribute('inert');
       setInert(true);
       var first = focusableInDrawer()[0];
-      if (first) first.focus();
+      if (first) first.focus({ preventScroll: true });
     } else {
       setInert(false);
       if (isMobile()) navLinks.setAttribute('inert', '');
@@ -82,7 +83,6 @@
     navLinks.addEventListener('click', function (e) {
       if (e.target.closest('a')) { setNav(false); toggle.focus(); }
     });
-    if (closeBtn) closeBtn.addEventListener('click', function () { setNav(false); toggle.focus(); });
     if (scrim) scrim.addEventListener('click', function () { setNav(false); toggle.focus(); });
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && navIsOpen) { setNav(false); toggle.focus(); return; }
